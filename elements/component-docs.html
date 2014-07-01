@@ -1,15 +1,17 @@
 <link rel="import" href="../components/polymer/polymer.html">
 <link rel="import" href="../components/context-free-parser/context-free-parser.html">
+<link rel="import" href="../components/core-collapse/core-collapse.html">
 <link rel="import" href="../components/marked-element/marked-element.html">
 <!-- <link rel="import" href="../components/highlightjs-element/highlightjs-element.html"> -->
 
 <polymer-element name="component-docs" attributes="elements">
   <template>
-    <context-free-parser url="{{url}}" data="{{data}}" on-data-ready="{{dataReady}}">
-    </context-free-parser>
+    <!-- <context-free-parser url="{{url}}" data="{{data}}" on-data-ready="{{dataReady}}">
+    </context-free-parser> -->
     <template repeat="{{c in data.classes}}">
       <doc-page id="{{c.name}}" name="{{c.name}}" data="{{c}}"
-                downloadable?="{{ isTopLevelElement(c.name, url) }}"></doc-page>
+                downloadable?="{{ isTopLevelElement(c.name, url) }}">
+      </doc-page>
     </template>
   </template>
   <script>
@@ -17,6 +19,7 @@
       elementName: null,
       url: null,
       elements: {},
+      chain: null,
       updateElementFromHash: function() {
         var elementName = window.location.hash.slice(1);
         if (this.elementName !== elementName && this.elements[elementName]) {
@@ -29,7 +32,55 @@
       },
       elementNameChanged: function() {
         this.url = '/' + this.elements[this.elementName];
+        this.chain = [];
+        this.getElement(this.url);
         window.location.hash = this.elementName;
+      },
+      getElement: function(url) {
+        // get the url with xhr
+        // listen for response
+        // regex text for @extends
+        // generate new url
+        // recurse
+        // generate docs from extends chain
+        
+        var req = new XMLHttpRequest();
+        req.addEventListener('load', function(e) {
+          var text = e.target.responseText;
+          this.chain.push({text: text});
+          var parent = text.match(/@extends\s(.*)/);
+          parent = parent && parent.length ? parent[1] : null;
+          if (parent) {
+            var prefix = parent.split('-')[0];
+            var url = ['/components', parent, parent + '.html'].join('/');
+            this.getElement(url);
+          } else {
+            this.generateDoc(this.chain);
+          }
+        }.bind(this));
+        req.open('GET', url, true);
+        req.send();
+      },
+      generateDoc: function(chain) {
+        // generate entities
+        // if chain has a length greater than 1, we've extended something
+        // create extended collection
+        // push subsequent entities into extended collection
+        
+        var data = {};
+        chain.forEach(function(element, index) {
+          var entities = ContextFreeParser.parse(element.text);
+          if (index === 0) {
+            if (chain.length > 1) {
+              entities[0].extended = [];
+            }
+            data.classes = entities;
+          } else {
+            data.classes[0].extended.push(entities);
+          }
+        });
+        this.data = data;
+        console.log(this.data);
       },
       dataChanged: function() {
         if (this.data.classes[0].name === 'Entity') {
@@ -75,9 +126,39 @@
         </section>
       </template>
 
-      <template if="{{data.attributes.length}}">
-        <section class="box attribute-box">
+      <template if="{{data.attributes.length || data.extended}}">
+        <section class="box attribute-box" style="position: relative;">
           <h3>Attributes</h3>
+          <template if="{{data.extended}}">
+            <a href="#" on-click="{{toggleAttributes}}"
+               style="position: absolute;
+                      top: 30px;
+                      right: 12px;
+                      color: white;">
+              Show inherited
+            </a>
+          </template>
+
+          <template if="{{data.extended}}">
+            <core-collapse id="attributes-collapse">
+              <template repeat="{{el in data.extended}}">
+                <template repeat="{{el[0].attributes}}">
+                  <div class="details" style="background: #FBE9E7;" horizontal layout>
+                    <div class="details-name" flex>
+                      <p><code>{{name}}</code></p>
+                    </div>
+                    <div class="details-info" flex three>
+                      <p layout horizontal center justified>
+                        <code>{{type}}</code><span class="default" hidden?="{{!default}}">default: <code>{{default}}</code></span>
+                      </p>
+                      <marked-element text="{{description}}"></marked-element>
+                    </div>
+                  </div>
+                </template>
+              </template>
+            </core-collapse>
+          </template>
+
           <template repeat="{{data.attributes}}">
             <div class="details" horizontal layout>
               <div class="details-name" flex>
@@ -184,6 +265,10 @@
       collectionPrefix: function(elementName) {
         var match = elementName.match(/(\w+)-/);
         return match ? match[1] : 'core';
+      },
+      toggleAttributes: function(e) {
+        e.preventDefault();
+        this.$['attributes-collapse'].toggle();
       }
     });
 
