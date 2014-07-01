@@ -65,18 +65,18 @@
         // generate entities
         // if chain has a length greater than 1, we've extended something
         // create extended collection
-        // push subsequent entities into extended collection
+        // push subsequent classes into extended collection
         
         var data = {};
         chain.forEach(function(element, index) {
-          var entities = ContextFreeParser.parse(element.text);
+          var classes = ContextFreeParser.parse(element.text);
           if (index === 0) {
             if (chain.length > 1) {
-              entities[0].extended = [];
+              classes[0].extended = [];
             }
-            data.classes = entities;
+            data.classes = classes;
           } else {
-            data.classes[0].extended.push(entities);
+            data.classes[0].extended.push(classes);
           }
         });
         this.data = data;
@@ -141,19 +141,21 @@
 
           <template if="{{data.extended}}">
             <core-collapse id="attributes-collapse">
-              <template repeat="{{el in data.extended}}">
-                <template repeat="{{el[0].attributes}}">
-                  <div class="details" style="background: #FBE9E7;" horizontal layout>
-                    <div class="details-name" flex>
-                      <p><code>{{name}}</code></p>
+              <template repeat="{{classes in data.extended}}">
+                <template repeat="{{class in classes}}">
+                  <template repeat="{{class.attributes}}">
+                    <div class="details" style="background: #FBE9E7;" horizontal layout>
+                      <div class="details-name" flex>
+                        <p><code>{{name}}</code></p>
+                      </div>
+                      <div class="details-info" flex three>
+                        <p layout horizontal center justified>
+                          <code>{{type}}</code><span class="default" hidden?="{{!default}}">default: <code>{{default}}</code></span>
+                        </p>
+                        <marked-element text="{{description}}"></marked-element>
+                      </div>
                     </div>
-                    <div class="details-info" flex three>
-                      <p layout horizontal center justified>
-                        <code>{{type}}</code><span class="default" hidden?="{{!default}}">default: <code>{{default}}</code></span>
-                      </p>
-                      <marked-element text="{{description}}"></marked-element>
-                    </div>
-                  </div>
+                  </template>
                 </template>
               </template>
             </core-collapse>
