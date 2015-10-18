@@ -39,6 +39,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       app.page = 'speakers';
     });
 
+    page('/sessions/:sessionId', function(data) {
+      app.page = 'sessions';
+      app.params = data.params;
+    });
+
     page();
 
   });

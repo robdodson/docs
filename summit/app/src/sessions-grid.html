@@ -17,7 +17,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="grid-view.html">
 <link rel="import" href="summit-icons.html">
 
-<dom-module id="schedule-grid">
+<dom-module id="sessions-grid">
 
   <style>
 
@@ -130,51 +130,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <template>
 
-    <grid-view>
-      <template is="dom-repeat" items="[[schedule]]">
+    <collapsible-card class="card" cascaded opened="[[!narrowLayout]]" narrow$="{{narrowLayout}}">
 
-        <div class="date-card" cascaded>
-          <div><span>[[item.day]]</span><span>,</span></div>
-          <div>[[item.date]]</div>
-        </div>
-
-        <template is="dom-repeat" items="[[item.sessions]]" on-dom-change="_updateCascadedNodes">
-
-          <collapsible-card class="card" cascaded opened="[[!narrowLayout]]" narrow$="{{narrowLayout}}">
-
-            <div class="content">
-              <div class="name">
-
-                <template is="dom-if" if="[[item.link]]">
-                  <a href="[[item.link]]">[[item.name]]</a>
-                </template>
-
-                <!-- Note: There is no white space between the opening and closing tag
-                     and the binding. It's a bug in current Polymer that whitespace in a tag
-                     will cause Polymer to print the literal text of the binding, instead of
-                     the value. -->
-                <template is="dom-if" if="[[!item.link]]">[[item.name]]</template>
-
-              </div>
-              <div class="speaker">[[item.speaker]]</div>
-              <div class="time">[[item.time]]</div>
-              <div class="location">[[item.location]]</div>
-              <template is="dom-if" if="[[item.video]]">
-                <div class="video"><a href="[[item.video]]">WATCH THE VIDEO</a></div>
-              </template>
-              <iron-icon class="toggle-icon" icon="arrow-drop-down" collapsible-toggle></iron-icon>
-            </div>
-
-            <div collapsible-content>
-              <div class="desc">[[item.desc]]</div>
-            </div>
-
-          </collapsible-card>
-
+      <div class="content">
+        <div class="name">[[session.name]]</div>
+        <div class="speaker">[[session.speaker]]</div>
+        <div class="time">[[session.time]]</div>
+        <div class="location">[[session.location]]</div>
+        <template is="dom-if" if="[[session.video]]">
+          <div class="video"><a href="[[session.video]]">WATCH THE VIDEO</a></div>
         </template>
+        <iron-icon class="toggle-icon" icon="arrow-drop-down" collapsible-toggle></iron-icon>
+      </div>
 
-      </template>
-    </grid-view>
+      <div collapsible-content>
+        <div class="desc">[[session.desc]]</div>
+      </div>
+
+    </collapsible-card>
 
   </template>
 
@@ -182,7 +155,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     Polymer({
 
-      is: 'schedule-grid',
+      is: 'sessions-grid',
 
       behaviors: [
         Polymer.CascadedAnimationBehavior,
@@ -190,8 +163,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       properties: {
 
-        schedule: {
+        sessions: {
           type: Array
+        },
+
+        sessionId: {
+          type: String
         },
 
         narrowLayout: {
@@ -199,6 +176,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           value: false
         }
 
+      },
+
+      observers: [
+        'sessionChanged(sessions, sessionId)'
+      ],
+
+      sessionChanged: function(sessions, sessionId) {
+        this.session = this.sessions[sessionId];
       }
 
     });

@@ -232,6 +232,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           <speakers-grid name="speakers" speakers="{{speakers}}" narrow-layout="{{narrowLayout}}"></speakers-grid>
 
+          <sessions-grid name="sessions" sessions="{{sessions}}" session-id="{{params.sessionId}}" narrow-layout="{{narrowLayout}}"></sessions-grid>
+
         </iron-pages>
 
         <div class="wait-list-banner home-page-hidden">
@@ -280,6 +282,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <iron-ajax auto url="/summit/data/speakers.json" last-response="{{speakers}}"></iron-ajax>
     <iron-ajax auto url="/summit/data/schedule.json" last-response="{{schedule}}"></iron-ajax>
+    <iron-ajax auto url="/summit/data/sessions.json" last-response="{{sessions}}"></iron-ajax>
 
     <x-scrollpos-control selected="[[page]]"></x-scrollpos-control>
 
